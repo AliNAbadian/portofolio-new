@@ -1,20 +1,21 @@
 # syntax=docker/dockerfile:1
 
-FROM oven/bun:1.3.14 AS base
+FROM oven/bun:1.3.14 AS deps
 WORKDIR /app
-
-FROM base AS deps
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-FROM base AS builder
+FROM node:20-bookworm-slim AS builder
+WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN bun run build
+# Bun 1.3.14 segfaults on `next build` finalize in some CI hosts; Node is stable here.
+RUN node ./node_modules/next/dist/bin/next build
 
-FROM base AS runner
+FROM oven/bun:1.3.14 AS runner
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
