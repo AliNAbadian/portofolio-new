@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM oven/bun:1.3.14-alpine AS base
+FROM oven/bun:1.3.14 AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -21,8 +21,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-RUN addgroup -S -g 1001 nodejs \
-  && adduser -S -u 1001 -G nodejs nextjs
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
