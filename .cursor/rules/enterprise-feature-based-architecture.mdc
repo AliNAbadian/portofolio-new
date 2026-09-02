@@ -1,0 +1,1766 @@
+---
+description: Enterprise feature-based architecture rules for large React + TypeScript B2B applications. Defines feature boundaries, dependency direction, state ownership, hooks, services, domain logic, workflows, and public APIs.
+globs:
+  - "src/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Enterprise Feature-Based Architecture
+
+## Purpose
+
+Use a pragmatic feature-based architecture for large React + TypeScript B2B applications.
+
+Optimize for:
+
+- feature ownership
+- explicit dependency direction
+- low coupling between business domains
+- small and stable public APIs
+- predictable state ownership
+- testability
+- team scalability
+- incremental evolution
+
+Do NOT optimize for:
+
+- maximum folder count
+- maximum number of hooks
+- maximum abstraction
+- theoretical purity
+- splitting every function into its own file
+
+The architecture should make it easy to answer:
+
+1. Which feature owns this behavior?
+2. Where does the data come from?
+3. Where is the business rule?
+4. Who owns the state?
+5. What can another feature import?
+6. Where does this user workflow start and end?
+
+---
+
+# 1. High-Level Structure
+
+```txt
+src/
+  app/
+    providers/
+    routes/
+    layouts/
+    config/
+    composition/
+
+  auth/
+    client/
+    model/
+    ui/
+
+  features/
+    <feature>/
+      pages/
+      components/
+      hooks/
+      services/
+      model/
+      store/
+      lib/
+      index.ts
+
+  shared/
+    ui/
+    hooks/
+    api/
+    lib/
+    config/
+    types/
+
+  tests/
+    unit/
+    integration/
+    e2e/
+```
+
+A feature represents a meaningful business capability or bounded domain.
+
+Examples:
+
+```txt
+features/
+  orders/
+  routing/
+  fleet/
+  customers/
+  billing/
+  inventory/
+  reporting/
+```
+
+Do not create features based only on UI widgets.
+
+Bad:
+
+```txt
+features/
+  table/
+  modal/
+  sidebar/
+  filters/
+```
+
+Good:
+
+```txt
+features/
+  orders/
+  route-planning/
+  customer-management/
+```
+
+---
+
+# 2. Dependency Direction
+
+The default dependency direction is:
+
+```txt
+app
+ ↓
+features
+ ↓
+shared
+```
+
+Within a feature:
+
+```txt
+pages/components
+       ↓
+     hooks
+       ↓
+ services / store / model / lib
+       ↓
+   shared infrastructure
+```
+
+More precisely:
+
+```txt
+UI
+ ↓
+Feature orchestration
+ ↓
+Domain / state / I/O
+ ↓
+Shared infrastructure
+```
+
+Do not create dependency cycles.
+
+Avoid:
+
+```txt
+feature A → feature B → feature A
+```
+
+Avoid:
+
+```txt
+shared → feature
+```
+
+`shared` must never import business logic from a feature.
+
+---
+
+# 3. Feature Boundaries
+
+A feature owns:
+
+- its business rules
+- its API integration
+- its client state
+- its domain types
+- its feature-level UI
+- its workflows/use cases
+
+Another feature must NOT import internal implementation details.
+
+Bad:
+
+```ts
+import { useOrderSelection } from "@/features/orders/hooks/useOrderSelection";
+import { fetchOrders } from "@/features/orders/services/fetchOrders";
+import { Order } from "@/features/orders/model/order.types";
+```
+
+Good:
+
+```ts
+import {
+  OrderList,
+  useOrderActions,
+  type Order,
+} from "@/features/orders";
+```
+
+Prefer the feature's public API:
+
+```txt
+features/orders/index.ts
+```
+
+over deep imports.
+
+---
+
+# 4. Public API Design
+
+`index.ts` is the architectural boundary of a feature.
+
+Export only things that are intentionally consumable outside the feature.
+
+Possible public exports:
+
+```ts
+export {
+  OrdersPage,
+  OrdersTable,
+  useOrders,
+  useOrderActions,
+} from "...";
+
+export type {
+  Order,
+  OrderId,
+} from "...";
+```
+
+Do NOT export implementation details by default:
+
+```ts
+useInternalOrderSelection
+orderQueryKeys
+mapOrderDto
+ordersStoreInternal
+```
+
+A public API should describe capabilities, not implementation.
+
+Prefer:
+
+```ts
+useOrderActions()
+```
+
+over exposing:
+
+```ts
+useCreateOrderMutation()
+useUpdateOrderMutation()
+useDeleteOrderMutation()
+```
+
+unless consumers genuinely need those independent capabilities.
+
+---
+
+# 5. Feature Size and Subdomains
+
+Large features should be allowed to contain internal subdomains.
+
+Do not create a new top-level feature just because a feature becomes large.
+
+Example:
+
+```txt
+features/routing/
+  route-planning/
+  route-optimization/
+  route-assignment/
+  shared/
+```
+
+Only split into independent top-level features when there is a real ownership or dependency boundary.
+
+A useful signal for splitting a feature:
+
+- independent business vocabulary
+- independent team ownership
+- independent release lifecycle
+- independent permissions
+- independent data model
+- repeated cross-feature consumption
+- excessive internal coupling
+
+Do not split solely because a directory contains many files.
+
+---
+
+# 6. UI Components
+
+Feature components should primarily render state and emit events.
+
+Good:
+
+```tsx
+<OrderRow
+  order={order}
+  selected={selected}
+  onSelect={onSelect}
+  onDelete={onDelete}
+/>
+```
+
+Avoid:
+
+```tsx
+<OrderRow />
+```
+
+that internally:
+
+- fetches unrelated data
+- performs mutations
+- owns business workflows
+- imports another feature
+- contains complex domain rules
+
+### Exception
+
+Small feature-specific components may use feature hooks when the behavior is genuinely local and cohesive.
+
+The rule is not:
+
+> Components can never use hooks.
+
+The rule is:
+
+> UI components must not become hidden application controllers.
+
+---
+
+# 7. Pages
+
+Pages are composition roots for a feature.
+
+A page may:
+
+- compose feature hooks
+- compose feature components
+- coordinate layout
+- connect URL state
+- handle page-level loading/error states
+
+A page should NOT contain:
+
+- raw API calls
+- business algorithms
+- duplicated domain rules
+- direct axios/fetch calls
+- complex data transformations
+
+Example:
+
+```tsx
+export function OrdersPage() {
+  const orders = useOrders();
+  const actions = useOrderActions();
+
+  return (
+    <OrdersView
+      orders={orders.data}
+      onDelete={actions.deleteOrder}
+    />
+  );
+}
+```
+
+---
+
+# 8. Hooks: Use Cases, Not File Extraction
+
+A custom hook is a React abstraction.
+
+Create a hook when it:
+
+- uses React state/effects/context
+- composes other hooks
+- integrates React with server/client state
+- represents a meaningful application capability
+- encapsulates a reusable React lifecycle concern
+
+Do NOT create a hook merely to shorten a component.
+
+Bad:
+
+```ts
+useCalculateTotal()
+useFormatOrder()
+useValidateOrder()
+```
+
+when these are pure functions.
+
+Good:
+
+```ts
+calculateTotal()
+formatOrder()
+validateOrder()
+```
+
+---
+
+# 9. Do NOT Force One Hook Per Use Case
+
+The phrase "one use-case per hook" is a guideline, not a mechanical rule.
+
+The real rule is:
+
+> One hook should represent one cohesive responsibility.
+
+These can reasonably belong together:
+
+```ts
+useOrderTable()
+```
+
+if it coordinates:
+
+- filters
+- sorting
+- pagination
+- selection
+- URL synchronization
+- query parameters
+
+These should usually NOT belong together:
+
+```ts
+useOrders()
+```
+
+that also handles:
+
+- orders
+- customers
+- permissions
+- billing
+- notifications
+- analytics
+- unrelated modal state
+```
+
+Measure cohesion, not line count.
+
+---
+
+# 10. Hook Proliferation
+
+Avoid both extremes.
+
+### Too much decomposition
+
+```txt
+useOrderFilter
+useOrderSort
+useOrderPagination
+useOrderSelection
+useOrderLoading
+useOrderError
+useOrderRefresh
+```
+
+when these are never independently useful.
+
+### Too little decomposition
+
+```txt
+useOrderEverything
+```
+
+### Preferred
+
+```txt
+useOrders()
+useOrderTable()
+useOrderActions()
+```
+
+where each represents a meaningful capability.
+
+Internal hooks are allowed:
+
+```txt
+hooks/
+  use-orders.ts
+  use-order-actions.ts
+  internal/
+    use-order-selection.ts
+    use-order-table-state.ts
+```
+
+The number of hooks is not an architecture metric.
+
+---
+
+# 11. Hook Public API
+
+A hook should expose a small, intentional API.
+
+Prefer:
+
+```ts
+const {
+  orders,
+  isLoading,
+  refresh,
+} = useOrders();
+```
+
+Avoid returning the entire implementation object:
+
+```ts
+return query;
+```
+
+when consumers should not depend on every library-specific property.
+
+Prefer feature semantics:
+
+```ts
+return {
+  orders,
+  isLoading,
+  error,
+  refresh,
+};
+```
+
+This creates an abstraction boundary around the state library.
+
+---
+
+# 12. Server State
+
+Server state should be managed by the project's server-state solution, such as TanStack Query.
+
+Prefer:
+
+```ts
+useOrders()
+useOrderDetails(orderId)
+useOrderActions()
+```
+
+Server state includes:
+
+- remote data
+- caching
+- fetching
+- mutations
+- invalidation
+- synchronization
+
+Do not duplicate server state in Zustand or local React state unless there is a specific reason.
+
+Avoid:
+
+```ts
+const [orders, setOrders] = useState([]);
+```
+
+for data that is fundamentally server-owned.
+
+---
+
+# 13. Query Keys
+
+Query keys are part of the feature's data-access contract.
+
+Keep them centralized:
+
+```txt
+features/orders/
+  services/
+    orderQueries.ts
+```
+
+or:
+
+```txt
+features/orders/
+  model/
+    orderQueryKeys.ts
+```
+
+Example:
+
+```ts
+export const orderQueryKeys = {
+  all: ["orders"] as const,
+  lists: () => [...orderQueryKeys.all, "list"] as const,
+  list: (filters: OrderFilters) =>
+    [...orderQueryKeys.lists(), filters] as const,
+  detail: (id: OrderId) =>
+    [...orderQueryKeys.all, "detail", id] as const,
+};
+```
+
+Do not scatter query-key strings throughout components.
+
+---
+
+# 14. API / Services
+
+Services are I/O boundaries.
+
+They may:
+
+- call HTTP clients
+- call APIs
+- map transport errors
+- map DTOs
+- coordinate transport-specific behavior
+
+They should NOT contain UI logic.
+
+They should NOT import React.
+
+Example:
+
+```ts
+export async function fetchOrders(
+  filters: OrderFilters
+): Promise<OrderApiDto[]> {
+  return getJson("/orders", { params: filters });
+}
+```
+
+Transport implementation belongs in shared infrastructure.
+
+Feature code must not import axios directly if the application standardizes HTTP through a shared client.
+
+Bad:
+
+```ts
+import axios from "axios";
+```
+
+Good:
+
+```ts
+import { getJson } from "@/shared/api";
+```
+
+---
+
+# 15. DTO vs Domain Model
+
+Do not leak API DTOs throughout the application.
+
+Prefer:
+
+```txt
+API DTO
+  ↓
+mapper
+  ↓
+domain/application model
+  ↓
+UI
+```
+
+Example:
+
+```ts
+type OrderApiDto = {
+  order_id: string;
+  customer_name: string;
+};
+
+type Order = {
+  id: OrderId;
+  customerName: string;
+};
+```
+
+Mapping belongs near the feature's data boundary.
+
+Pure mapping can live in:
+
+```txt
+model/
+```
+
+or:
+
+```txt
+services/
+```
+
+depending on project convention.
+
+The important rule is:
+
+> Transport representation must not become the domain representation accidentally.
+
+---
+
+# 16. Domain Logic
+
+Business rules must be framework-independent.
+
+Good:
+
+```ts
+canCancelOrder(order)
+calculateRouteCost(route)
+canAssignVehicle(order, vehicle)
+validateDispatchWindow(order)
+```
+
+Bad:
+
+```ts
+useCanCancelOrder()
+useCalculateRouteCost()
+```
+
+when React is not required.
+
+Domain logic should be testable without rendering React.
+
+---
+
+# 17. Do Not Turn `model/` Into a Junk Drawer
+
+`model/` is NOT:
+
+> Anything reusable.
+
+Put domain concepts there:
+
+```txt
+types
+rules
+selectors
+mappers
+domain constants
+value-object-like helpers
+```
+
+Do not put:
+
+```txt
+generic date helpers
+generic UI helpers
+HTTP clients
+React hooks
+formatters unrelated to the domain
+```
+
+Use:
+
+```txt
+shared/lib
+shared/utils
+shared/hooks
+shared/ui
+```
+
+when something is genuinely domain-agnostic and reused.
+
+---
+
+# 18. Feature `lib/`
+
+Use `lib/` for feature-local technical/domain helpers that do not fit cleanly into the public domain model.
+
+Examples:
+
+```txt
+lib/
+  buildOrderExport.ts
+  normalizeOrderFilters.ts
+  createOrderSearchParams.ts
+```
+
+Do not use `lib/` as a dumping ground.
+
+If a file is business-critical, prefer an explicit name such as:
+
+```txt
+model/orderRules.ts
+```
+
+instead of:
+
+```txt
+lib/helpers.ts
+```
+
+Never create generic files like:
+
+```txt
+utils.ts
+helpers.ts
+common.ts
+misc.ts
+```
+
+inside a large feature.
+
+---
+
+# 19. State Ownership
+
+Every piece of state should have an explicit owner.
+
+Use this decision model:
+
+```txt
+Is it server-owned?
+  → Server-state library
+
+Is it shared client state across feature components?
+  → Feature store
+
+Is it URL/shareable/navigation state?
+  → Router/search params
+
+Is it local UI state?
+  → Component
+
+Is it derived?
+  → Selector/pure function
+
+Is it temporary form state?
+  → Form state/local state
+```
+
+Do not move state to global stores merely because it is convenient.
+
+---
+
+# 20. URL State
+
+For B2B applications, URL state is often first-class state.
+
+Filters that should survive:
+
+- refresh
+- navigation
+- sharing
+- browser back/forward
+
+should generally live in URL/search params.
+
+Examples:
+
+```txt
+?page=2
+&status=pending
+&warehouse=12
+&sort=-createdAt
+```
+
+Do not duplicate URL state and local state without a clear synchronization strategy.
+
+Create a feature-specific URL adapter when necessary:
+
+```ts
+parseOrderFilters(searchParams)
+serializeOrderFilters(filters)
+```
+
+---
+
+# 21. Forms
+
+Forms are a separate concern from domain rules.
+
+Recommended separation:
+
+```txt
+form state
+   ↓
+form validation
+   ↓
+domain validation
+   ↓
+mutation
+```
+
+Do not put all form behavior into a giant feature hook.
+
+Example:
+
+```ts
+useOrderForm()
+useOrderActions()
+```
+
+can be appropriate when they represent distinct responsibilities.
+
+Keep schema/validation framework-independent where practical.
+
+---
+
+# 22. Permissions and Authorization
+
+Permission checks must not be duplicated across UI components.
+
+Prefer a feature-level capability:
+
+```ts
+canEditOrder(order, permissions)
+canDeleteOrder(order, permissions)
+```
+
+The UI consumes the result:
+
+```tsx
+{canDeleteOrder(order, permissions) && (
+  <DeleteButton />
+)}
+```
+
+Do not treat UI visibility as the security boundary.
+
+Backend authorization remains authoritative.
+
+---
+
+# 23. Cross-Feature Workflows
+
+This is critical for large B2B applications.
+
+Do not make one feature reach directly into another feature's internals.
+
+Bad:
+
+```txt
+orders → customers/hooks
+orders → routing/store
+routing → orders/services
+```
+
+Prefer a composition layer for workflows involving multiple domains:
+
+```txt
+app/
+  workflows/
+    dispatch-order/
+```
+
+or a dedicated application-level feature when appropriate:
+
+```txt
+features/
+  dispatch/
+```
+
+Example:
+
+```ts
+useDispatchOrder()
+```
+
+may coordinate:
+
+```txt
+orders
++
+fleet
++
+routing
+```
+
+while each feature retains ownership of its own domain logic.
+
+Rule:
+
+> Cross-feature orchestration belongs above the participating domain features.
+
+---
+
+# 24. Avoid Shared-State Coupling
+
+Do not allow multiple features to mutate another feature's store directly.
+
+Bad:
+
+```ts
+ordersStore.getState().setSelected(...)
+```
+
+from another feature.
+
+Prefer a public capability:
+
+```ts
+selectOrder(orderId)
+```
+
+or an application-level workflow.
+
+A feature owns its state.
+
+---
+
+# 25. Events and Commands
+
+For complex B2B workflows, prefer explicit commands/events over hidden side effects.
+
+Good:
+
+```ts
+approveOrder(orderId)
+assignRoute(routeId)
+dispatchOrder(orderId)
+```
+
+Avoid implicit chains such as:
+
+```txt
+setOrderStatus()
+  → effect
+  → update route
+  → effect
+  → update notification
+  → effect
+  → refresh orders
+```
+
+Explicit orchestration is easier to debug and test.
+
+---
+
+# 26. React Effects
+
+Do not use `useEffect` as a general business workflow engine.
+
+Bad:
+
+```ts
+useEffect(() => {
+  if (shouldDispatch) {
+    dispatchOrder();
+  }
+}, [shouldDispatch]);
+```
+
+Prefer explicit events:
+
+```ts
+const handleDispatch = () => {
+  dispatchOrder();
+};
+```
+
+Use effects primarily for synchronization:
+
+```txt
+React ↔ browser API
+React ↔ external library
+React ↔ URL
+React ↔ subscriptions
+```
+
+---
+
+# 27. Error Handling
+
+Do not let raw infrastructure errors leak into every component.
+
+Normalize errors at the appropriate boundary.
+
+Prefer feature semantics:
+
+```ts
+{
+  error: "ORDER_NOT_FOUND"
+}
+```
+
+or a typed application error.
+
+Avoid components knowing whether an error came from:
+
+```txt
+AxiosError
+FetchError
+NetworkError
+BackendHttpError
+```
+
+unless the UI genuinely needs that distinction.
+
+---
+
+# 28. Loading and Empty States
+
+Loading and empty states are part of the feature UI contract.
+
+Prefer:
+
+```ts
+{
+  data,
+  isLoading,
+  isEmpty,
+  error,
+}
+```
+
+or an equivalent feature-specific representation.
+
+Do not scatter inconsistent loading logic across dozens of components.
+
+For complex pages, define explicit UI states:
+
+```txt
+initial-loading
+ready
+empty
+error
+refreshing
+partial
+```
+
+when the product requires them.
+
+---
+
+# 29. Derived Data
+
+Do not duplicate derived calculations.
+
+Bad:
+
+```ts
+// Component A
+orders.filter(...)
+
+// Component B
+orders.filter(...)
+
+// Component C
+orders.filter(...)
+```
+
+Prefer:
+
+```ts
+selectPendingOrders(orders)
+calculateOrderTotals(orders)
+groupOrdersByCustomer(orders)
+```
+
+Selectors should remain pure.
+
+Memoization should be introduced when there is a demonstrated performance need, not automatically.
+
+---
+
+# 30. Performance Boundaries
+
+Large B2B applications often contain:
+
+- large tables
+- maps
+- timelines
+- charts
+- real-time updates
+- complex forms
+
+Do not put high-frequency state into broad providers or global stores.
+
+Avoid rerendering an entire page because one row changed.
+
+Prefer:
+
+```txt
+server state
+→ normalized/selected data
+→ localized subscriptions
+→ memoized/presentational components
+```
+
+For large collections:
+
+- virtualize where necessary
+- subscribe to the smallest useful state slice
+- avoid unstable object creation in hot paths
+- keep expensive calculations outside render
+- measure before adding memoization
+
+---
+
+# 31. Real-Time / WebSocket State
+
+Real-time data should have a clear owner.
+
+Do not let every component create its own socket connection.
+
+Prefer:
+
+```txt
+shared infrastructure
+       ↓
+feature adapter
+       ↓
+server state / feature store
+       ↓
+UI
+```
+
+Example:
+
+```txt
+shared/api/realtime
+features/fleet/services/fleetRealtime
+features/fleet/store/fleetStore
+```
+
+The feature decides how real-time events affect its state.
+
+---
+
+# 32. Tables, Maps, Timelines, and Other Complex Surfaces
+
+Complex UI surfaces should not become domain owners.
+
+For example:
+
+```txt
+OrdersTable
+RouteMap
+RouteTimeline
+```
+
+should primarily render a model and emit events.
+
+Avoid embedding:
+
+- API calls
+- route algorithms
+- persistence
+- business rules
+- cross-feature workflows
+
+inside visualization components.
+
+---
+
+# 33. Shared Code
+
+Move code to `shared/` only when it is genuinely domain-agnostic.
+
+Good:
+
+```txt
+shared/ui/Button
+shared/lib/date
+shared/api/httpClient
+shared/hooks/useDebounce
+```
+
+Bad:
+
+```txt
+shared/lib/calculateOrderPrice
+shared/hooks/useRouteOptimization
+shared/utils/customerPermissions
+```
+
+Those belong to their respective features.
+
+Do not move code to shared preemptively.
+
+A useful rule:
+
+> Duplication is sometimes cheaper than premature coupling.
+
+---
+
+# 34. Import Rules
+
+Prefer the alias:
+
+```ts
+@/features/orders
+@/shared/ui
+@/shared/api
+```
+
+Avoid relative imports that cross architectural boundaries:
+
+```ts
+../../../../features/orders/...
+```
+
+Within a feature, aliases are also preferred when the repository standard requires them.
+
+Never bypass a feature's public API using deep imports.
+
+---
+
+# 35. Type Ownership
+
+Types should have clear ownership.
+
+If a type describes a business entity:
+
+```ts
+Order
+Route
+Vehicle
+Customer
+```
+
+the owning feature should define it.
+
+If a type describes infrastructure:
+
+```ts
+HttpResponse
+Pagination
+ApiError
+```
+
+shared infrastructure may own it.
+
+Do not duplicate the same domain type in multiple features.
+
+When another feature needs the concept, consume it through the owning feature's public API or through an explicitly shared domain package if the architecture has one.
+
+---
+
+# 36. Testing Boundaries
+
+Test business rules without React.
+
+```ts
+describe("canCancelOrder", ...)
+describe("calculateRouteCost", ...)
+```
+
+Test hooks for orchestration.
+
+```ts
+describe("useOrderActions", ...)
+```
+
+Test components primarily for UI behavior.
+
+```ts
+describe("OrderTable", ...)
+```
+
+Use integration tests for workflows crossing multiple boundaries.
+
+Do not make every pure function a React test.
+
+---
+
+# 37. File Naming
+
+Prefer explicit names:
+
+```txt
+useOrderActions.ts
+orderQueryKeys.ts
+orderRules.ts
+orderMapper.ts
+fetchOrders.ts
+createOrder.ts
+```
+
+Avoid vague names:
+
+```txt
+utils.ts
+helpers.ts
+logic.ts
+data.ts
+common.ts
+manager.ts
+```
+
+A filename should communicate the responsibility.
+
+---
+
+# 38. Avoid Speculative Architecture
+
+Do not add:
+
+```txt
+repositories/
+adapters/
+facades/
+factories/
+useCases/
+domain/
+data/
+```
+
+just because they are common enterprise patterns.
+
+Add an abstraction when the codebase demonstrates a real need:
+
+- multiple implementations
+- repeated orchestration
+- difficult testing
+- clear domain boundary
+- external integration isolation
+- team ownership boundary
+
+Prefer the simplest architecture that preserves boundaries.
+
+---
+
+# 39. Practical Feature Template
+
+A normal feature may look like:
+
+```txt
+features/orders/
+  pages/
+    OrdersPage.tsx
+
+  components/
+    OrdersTable.tsx
+    OrderRow.tsx
+    OrderFilters.tsx
+
+  hooks/
+    useOrders.ts
+    useOrderActions.ts
+    useOrderTable.ts
+    internal/
+      useOrderSelection.ts
+
+  services/
+    fetchOrders.ts
+    createOrder.ts
+    updateOrder.ts
+    deleteOrder.ts
+    orderQueryKeys.ts
+
+  model/
+    order.types.ts
+    order.mapper.ts
+    order.rules.ts
+    order.selectors.ts
+
+  store/
+    order.store.ts
+
+  lib/
+    normalizeOrderFilters.ts
+
+  index.ts
+```
+
+Not every feature needs every directory.
+
+Empty abstraction is worse than a missing folder.
+
+---
+
+# 40. Example: Large B2B Feature
+
+For a route-planning product:
+
+```txt
+features/route-planning/
+  pages/
+    RoutePlanningPage.tsx
+
+  components/
+    RouteMap.tsx
+    RouteTimeline.tsx
+    RouteToolbar.tsx
+    OrderAssignmentPanel.tsx
+
+  hooks/
+    useRoutePlanning.ts
+    useRouteActions.ts
+    useRouteTable.ts
+    internal/
+      useRouteSelection.ts
+      useRouteRealtime.ts
+
+  services/
+    fetchRoutes.ts
+    optimizeRoute.ts
+    assignOrder.ts
+    updateRoute.ts
+
+  model/
+    route.types.ts
+    route.rules.ts
+    route.selectors.ts
+    route.mapper.ts
+    routeQueryKeys.ts
+
+  store/
+    route.store.ts
+
+  lib/
+    buildRouteParams.ts
+
+  index.ts
+```
+
+The algorithm:
+
+```ts
+optimizeRoute(...)
+```
+
+is not React code.
+
+The API call:
+
+```ts
+optimizeRouteRequest(...)
+```
+
+is not UI code.
+
+The hook:
+
+```ts
+useRoutePlanning()
+```
+
+coordinates React/application state.
+
+The components:
+
+```tsx
+<RouteMap />
+<RouteTimeline />
+```
+
+render the result.
+
+---
+
+# 41. Cross-Feature Example
+
+Suppose dispatching an order requires:
+
+```txt
+Orders
++
+Fleet
++
+Route Planning
++
+Notifications
+```
+
+Do not make:
+
+```txt
+Order component
+  → fleet store
+  → route service
+  → notification service
+```
+
+Instead:
+
+```txt
+features/dispatch/
+  hooks/
+    useDispatchOrder.ts
+```
+
+The workflow coordinates the features:
+
+```ts
+useDispatchOrder()
+```
+
+while the individual features retain ownership of:
+
+```txt
+orders
+fleet
+routing
+notifications
+```
+
+This prevents business domains from becoming tightly coupled.
+
+---
+
+# 42. Architecture Decision Checklist
+
+Before adding code, answer:
+
+### Ownership
+
+- Which feature owns this behavior?
+
+### State
+
+- Is this server state, URL state, global client state, local UI state, or derived state?
+
+### React
+
+- Does this actually require React?
+
+### Business logic
+
+- Can this be a pure function?
+
+### API
+
+- Is this an I/O concern?
+
+### Boundary
+
+- Is another feature importing an internal implementation?
+
+### Reuse
+
+- Is this genuinely shared or merely duplicated once?
+
+### Workflow
+
+- Does this operation cross multiple business domains?
+
+### Public API
+
+- Does this need to be exported from the feature?
+
+### Testing
+
+- Can the business rule be tested without React?
+
+---
+
+# 43. Red Flags
+
+Treat these as architecture warnings:
+
+```txt
+useEverything()
+```
+
+```txt
+shared/ contains business rules
+```
+
+```txt
+components call APIs directly
+```
+
+```txt
+features import each other's internals
+```
+
+```txt
+one feature mutates another feature's store
+```
+
+```txt
+useEffect triggers business workflows
+```
+
+```txt
+DTOs leak into UI everywhere
+```
+
+```txt
+URL filters duplicated in local state
+```
+
+```txt
+generic utils.ts grows indefinitely
+```
+
+```txt
+every function has a custom hook
+```
+
+```txt
+one hook returns 20+ unrelated properties
+```
+
+```txt
+cross-feature workflow is hidden inside a domain feature
+```
+
+---
+
+# 44. Core Principles
+
+1. Features own business capabilities.
+2. Features expose stable public APIs.
+3. Internal implementation stays internal.
+4. Hooks are React/application boundaries, not file-extraction tools.
+5. Cohesion matters more than hook count.
+6. Pure business logic must remain React-independent.
+7. Server state must not be duplicated unnecessarily.
+8. State ownership must be explicit.
+9. URL state is first-class state for navigable B2B workflows.
+10. Cross-feature workflows belong in a composition/application layer.
+11. Shared code must remain domain-agnostic.
+12. API DTOs should not leak through the entire application.
+13. UI components should render and emit events, not own business workflows.
+14. Effects are for synchronization, not hidden business processes.
+15. Do not introduce enterprise abstractions without a demonstrated need.
+16. Prefer explicit commands and capabilities over hidden side effects.
+17. Optimize for team scalability and change isolation.
+18. Architecture should evolve with real complexity, not predicted complexity.
+
+---
+
+# 45. Final Mental Model
+
+Think of the application as:
+
+```txt
+                         APP
+                          │
+             ┌────────────┴────────────┐
+             │                         │
+        WORKFLOWS                 FEATURES
+             │                 ┌───────┼───────┐
+             │                 │       │       │
+             ▼                 ▼       ▼       ▼
+       Cross-domain         Orders   Fleet  Routing
+       orchestration           │       │       │
+                               │       │       │
+                         ┌─────┴───────┴───────┴─────┐
+                         │                           │
+                       UI/API                    DOMAIN
+                         │                           │
+                         ▼                           ▼
+                       React                   Pure TS logic
+```
+
+The architecture should make boundaries obvious:
+
+```txt
+Who owns it?       → Feature
+Does it need React? → Hook
+Is it business logic? → Pure function
+Is it remote I/O?   → Service
+Is it shared state? → Store/server-state layer
+Is it navigation state? → URL
+Does it cross domains? → Workflow/composition layer
+Is it truly generic? → Shared
+```
+
+When in doubt, prefer the smallest abstraction that preserves the correct ownership boundary.

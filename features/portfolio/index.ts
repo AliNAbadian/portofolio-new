@@ -1,0 +1,9 @@
+export { Starfield } from "./components/starfield";
+export { SiteNav } from "./components/site-nav";
+export { PortfolioShell } from "./components/portfolio-shell";
+export { HeroSection } from "./components/hero-section";
+export { AboutSection } from "./components/about-section";
+export { ExperienceSection } from "./components/experience-section";
+export { ProjectsSection } from "./components/projects-section";
+export { SkillsSection } from "./components/skills-section";
+export { ContactSection } from "./components/contact-section";

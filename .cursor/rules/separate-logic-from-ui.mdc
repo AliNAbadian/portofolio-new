@@ -1,0 +1,76 @@
+---
+description: Keep logic out of ALL pages and UI components — hooks + services own behavior
+globs: "**/{pages,components,ui}/**/*.{ts,tsx},**/*Page.tsx,**/*Modal.tsx,**/*Drawer.tsx,**/*Table.tsx"
+alwaysApply: true
+---
+
+# Separate logic from pages and UI
+
+Applies to **every** page and UI component (`pages/`, `components/`, `shared/ui/`, screens, modals, drawers, tables). Pages and UI render. Hooks orchestrate. Services/model own I/O and rules.
+
+## Layers
+
+| Layer | Location | Owns | Must not |
+| ----- | -------- | ---- | -------- |
+| **Page** | `pages/*.tsx`, `*Page.tsx` | Compose hooks, pass props, layout shells | Fetch, mutations, domain mapping, orchestration `useEffect` |
+| **UI** | `components/**`, `shared/ui/**`, modals/drawers/tables | Markup, styles, **local UI-only** state (open/hover/tab) | `useQuery` / `useMutation` / axios / SignalR / store sync / data `useEffect` |
+| **Hook** | `hooks/use-*.ts` | Query/mutation, handlers, effects, derived state | JSX |
+| **Service / model** | `services/`, `model/` | HTTP, DTO map, pure rules | React |
+
+## Allowed vs forbidden in `.tsx` (pages & UI)
+
+**Allowed in UI/page (local presentation only)**
+
+- `useState` for open/closed, hover, active tab, input draft that never leaves the component
+- Trivial presentational toggles with no side effects
+
+**Forbidden in UI/page — extract to `hooks/use-*.ts`**
+
+- `useEffect` that syncs stores, fetches, invalidates queries, subscribes, or maps domain data
+- `useState` that holds server/domain data (lists, DTOs, selection synced to map/store)
+- `useQuery` / `useMutation` / `useQueryClient` / axios / SignalR
+- Auth/session branching that drives data loading
+- Multi-step handlers (save → invalidate → toast → close)
+
+```tsx
+// ❌ BAD — effect + domain state in the component
+export function InvoicesTable() {
+  const [rows, setRows] = useState([]);
+  useEffect(() => { loadInvoices().then(setRows); }, []);
+  return <Table dataSource={rows} />;
+}
+
+// ✅ GOOD — hook owns effects/state; UI only renders
+// hooks/use-invoices-table.ts
+export function useInvoicesTable() {
+  const { data, isLoading } = useGetInvoices(params);
+  // selection sync effects live here
+  return { dataSource, isLoading, rowSelection };
+}
+// components/InvoicesTable.tsx → const vm = useInvoicesTable(); return <Table {...vm} />;
+```
+
+```tsx
+// ❌ BAD — page orchestrates in the file
+export function RouteHistoryPage() {
+  const [filters, setFilters] = useState(...);
+  useEffect(() => { /* fetch + map */ }, [filters]);
+  return <Layout>...</Layout>;
+}
+
+// ✅ GOOD — page only wires
+// hooks/use-route-history-page.ts → view model
+export function RouteHistoryPage() {
+  const vm = useRouteHistoryPage();
+  return <RouteHistoryView {...vm} />;
+}
+```
+
+## Rules
+
+1. **Page = wiring** — call focused hooks; pass results into components.
+2. **UI = props in / events out** — no API clients; no TanStack Query in leaf UI.
+3. **Logic lives in hooks** — including most `useEffect` and non-trivial `useState`.
+4. **Prefer small hooks** — split by concern; do not leave orchestration in the `.tsx` file.
+
+When unsure: if removing network/stores/`useEffect` would break the file, that logic belongs in a hook — not in the component.

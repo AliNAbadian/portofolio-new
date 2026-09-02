@@ -1,0 +1,607 @@
+---
+description: Rules for designing React hooks in feature-based architecture. Prevents fat hooks while avoiding unnecessary hook proliferation.
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: true
+---
+
+# React Hook Architecture
+
+## Purpose
+
+Use React hooks as boundaries between React components and feature/application logic.
+
+The goal is NOT to minimize the number of hooks.
+
+The goal is to create:
+
+- cohesive hooks
+- small public feature APIs
+- reusable domain logic
+- clear separation between React state, server state, UI state, and business logic
+- feature internals that can evolve without leaking implementation details
+
+Avoid both extremes:
+
+- One giant `useEverything()` hook
+- Dozens of meaningless one-purpose hooks
+- Prefer cohesive feature/use-case hooks backed by plain TypeScript functions, stores, queries, and internal hooks.
+
+## 1. A Hook Must Have a Reason to Exist
+
+Create a custom hook when the logic:
+
+- uses React state
+- uses React effects
+- consumes React context
+- uses another hook
+- integrates React with a state/query library
+- represents a meaningful feature/application use case
+- encapsulates a reusable React lifecycle concern
+
+Do NOT create a hook simply to move code out of a component.
+
+### Bad
+
+```ts
+function useCalculateOrderTotal(order: Order) {
+  return order.items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  );
+}
+```
+
+### Good
+
+```ts
+function calculateOrderTotal(order: Order) {
+  return order.items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  );
+}
+```
+
+## 2. Prefer Plain Functions for Domain Logic
+
+Business logic should not depend on React.
+
+Prefer functions such as:
+
+```text
+calculateRoute()
+calculateOrderTotal()
+validateOrder()
+canEditOrder()
+getOrderStatus()
+calculateDistance()
+selectSelectedOrders()
+```
+
+Do not create `use*` wrappers for pure logic unless React integration is actually required.
+
+## 3. Separate State by Responsibility
+
+### Server State
+
+Use TanStack Query or the project's server-state library.
+
+Examples:
+
+```ts
+useOrdersQuery();
+useUpdateOrderMutation();
+```
+
+### Global Client State
+
+Use the project's state manager, such as Zustand.
+
+Examples:
+
+```text
+ordersStore
+routeStore
+mapStore
+```
+
+### Local UI State
+
+Keep simple local state in the component:
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+Do not create a custom hook for trivial state used by a single component.
+
+### Derived State
+
+Prefer selectors or pure functions:
+
+```ts
+const selectedOrders = selectSelectedOrders(orders, selectedOrderIds);
+```
+
+## 4. Hooks Should Represent Cohesive Responsibilities
+
+A hook may contain multiple pieces of state and behavior when they belong to the same use case.
+
+For example:
+
+```ts
+useOrderTable();
+```
+
+can reasonably manage:
+
+- filters
+- sorting
+- pagination
+- selection
+- query parameters
+
+Do not automatically split these into:
+
+```text
+useOrderFilters()
+useOrderSorting()
+useOrderPagination()
+useOrderSelection()
+```
+
+unless they are independently useful or reusable.
+
+The correct question is:
+
+> Does this logic represent an independent responsibility or use case?
+
+Not:
+
+> Can this be split into another hook?
+
+## 5. Prefer Use-Case Hooks Over Utility Hooks
+
+Prefer meaningful capabilities:
+
+```text
+useOrderManagement()
+useRoutePlanning()
+useSmartRouting()
+useTripPlanning()
+useCheckout()
+```
+
+Avoid meaningless wrappers:
+
+```text
+useOrderData()
+useOrderState()
+useOrderCalculation()
+useOrderValidation()
+useOrderFormatting()
+```
+
+when those responsibilities can be represented by queries, stores, or plain functions.
+
+## 6. Internal Hooks Are Allowed
+
+Do not avoid internal hooks merely because they increase the hook count.
+
+Internal decomposition is good when it improves:
+
+- readability
+- testing
+- reuse
+- isolation
+- maintainability
+
+Example:
+
+```text
+features/route-planning/
+├── hooks/
+│   ├── use-route-planning.ts
+│   └── internal/
+│       ├── use-route-selection.ts
+│       ├── use-route-optimization.ts
+│       └── use-route-query.ts
+```
+
+The public API can be:
+
+```ts
+useRoutePlanning();
+```
+
+while the implementation composes internal hooks.
+
+## 7. Avoid Hook Composition That Adds No Value
+
+Do not create unnecessary layers.
+
+### Bad
+
+```ts
+function useOrders() {
+  return useOrdersQuery();
+}
+
+function useOrdersQuery() {
+  return useQuery(...);
+}
+```
+
+if `useOrders()` adds no meaningful abstraction.
+
+Every abstraction should provide at least one of:
+
+- meaningful naming
+- domain semantics
+- reuse
+- isolation
+- testability
+- API stability
+- composition
+
+## 8. Do Not Create God Hooks
+
+Avoid hooks such as:
+
+```text
+useOrdersEverything()
+useDashboard()
+useApp()
+usePage()
+useFeature()
+```
+
+when they contain unrelated responsibilities.
+
+Separate unrelated use cases:
+
+```text
+useOrders()
+useDashboardAnalytics()
+useDashboardFilters()
+useMap()
+```
+
+A higher-level hook may compose them when a page genuinely needs that capability.
+
+## 9. Do Not Split Hooks by Line Count
+
+Hook size alone is not a reason to split it.
+
+A large hook can be well-designed if it represents one cohesive use case.
+
+A tiny hook can be badly designed if it only wraps another function.
+
+Evaluate:
+
+- responsibility
+- cohesion
+- coupling
+- reuse
+- public API complexity
+
+## 10. Feature Public API
+
+Features should expose meaningful capabilities rather than implementation details.
+
+Prefer:
+
+```text
+features/orders/
+├── api/
+├── model/
+├── lib/
+├── hooks/
+│   ├── use-orders.ts
+│   └── use-order-actions.ts
+└── ui/
+```
+
+Components should consume meaningful feature APIs such as:
+
+```ts
+useOrders();
+useOrderActions();
+```
+
+rather than depending on every internal implementation hook.
+
+## 11. Hook Naming
+
+Use `use*` only for functions that follow React Hook rules.
+
+Good:
+
+```ts
+useOrders();
+useRoutePlanning();
+useSmartRouting();
+useOrderActions();
+useMapInteraction();
+```
+
+For pure logic use:
+
+```ts
+calculateTotal();
+formatOrder();
+validateOrder();
+```
+
+## 12. Hooks Should Not Become Service Containers
+
+Avoid:
+
+```ts
+function useOrders() {
+  return {
+    getOrders,
+    createOrder,
+    updateOrder,
+    deleteOrder,
+    validateOrder,
+    calculateTotal,
+    formatOrder,
+    checkPermissions,
+  };
+}
+```
+
+Separate responsibilities:
+
+```text
+api/
+    get-orders.ts
+    create-order.ts
+    update-order.ts
+
+lib/
+    validate-order.ts
+    calculate-total.ts
+    permissions.ts
+
+hooks/
+    use-orders.ts
+    use-order-actions.ts
+```
+
+## 13. Prefer Composition
+
+Complex features should be composed from smaller abstractions.
+
+Example:
+
+```ts
+function useSmartRouting() {
+  const orders = useOrders();
+  const vehicles = useVehicles();
+  const route = useRouteState();
+
+  const optimize = useCallback(() => {
+    return optimizeRoutes({
+      orders: orders.data,
+      vehicles: vehicles.data,
+      route,
+    });
+  }, [orders.data, vehicles.data, route]);
+
+  return {
+    orders,
+    vehicles,
+    route,
+    optimize,
+  };
+}
+```
+
+The algorithm remains outside React:
+
+```ts
+optimizeRoutes(...)
+```
+
+## 14. Prefer Events Over Business Effects
+
+Avoid using `useEffect` as a general business workflow engine.
+
+### Bad
+
+```ts
+useEffect(() => {
+  if (shouldOptimize) {
+    optimizeRoute();
+  }
+}, [shouldOptimize]);
+```
+
+when optimization is triggered by a user action.
+
+Prefer:
+
+```ts
+const handleOptimize = () => {
+  optimizeRoute();
+};
+```
+
+Use effects primarily for synchronization and lifecycle concerns.
+
+## 15. Avoid Premature Hook Extraction
+
+Keep logic local when it is:
+
+- used once
+- small
+- clearly local to a component
+
+Extract it when:
+
+- it becomes complex
+- it is reused
+- it represents a feature responsibility
+- it needs independent testing
+- it improves component readability
+- it needs to be shared between components
+
+## 16. Recommended Architecture
+
+Use this mental model:
+
+```text
+                    COMPONENT
+                        │
+                        ▼
+               PUBLIC FEATURE HOOK
+                        │
+          ┌─────────────┼─────────────┐
+          ▼             ▼             ▼
+       QUERY          STORE       INTERNAL HOOKS
+          │             │             │
+          └─────────────┼─────────────┘
+                        ▼
+                  DOMAIN FUNCTIONS
+                        │
+                        ▼
+                    API / DATA
+```
+
+## 17. Decision Tree
+
+Before creating a hook, ask:
+
+### Does it need React?
+
+If NO:
+
+```text
+Use a plain function.
+```
+
+If YES, ask:
+
+### Does it represent a reusable or meaningful responsibility?
+
+If NO:
+
+```text
+Keep it in the component.
+```
+
+If YES, ask:
+
+### Is it part of an existing use case?
+
+If YES:
+
+```text
+Compose it into the existing hook.
+```
+
+If NO:
+
+```text
+Create a separate hook.
+```
+
+Then ask:
+
+### Does the component need this abstraction directly?
+
+If NO:
+
+```text
+Keep it internal.
+```
+
+## 18. Example Feature
+
+```text
+features/
+└── orders/
+    ├── api/
+    │   ├── get-orders.ts
+    │   ├── create-order.ts
+    │   └── update-order.ts
+    │
+    ├── model/
+    │   ├── orders.store.ts
+    │   ├── orders.selectors.ts
+    │   ├── orders.types.ts
+    │   └── orders.constants.ts
+    │
+    ├── lib/
+    │   ├── calculate-order-total.ts
+    │   ├── validate-order.ts
+    │   └── can-edit-order.ts
+    │
+    ├── hooks/
+    │   ├── use-orders.ts
+    │   ├── use-order-actions.ts
+    │   └── internal/
+    │       ├── use-order-selection.ts
+    │       └── use-order-table.ts
+    │
+    └── ui/
+        ├── orders-table.tsx
+        ├── order-filters.tsx
+        └── order-row.tsx
+```
+
+## 19. Anti-Patterns
+
+Avoid:
+
+```text
+useEverything()
+usePage()
+useFeature()
+useData()
+useLogic()
+useHelpers()
+```
+
+Avoid:
+
+```text
+useCalculate()
+useValidate()
+useFormat()
+useTransform()
+```
+
+when they are pure functions.
+
+Avoid a component that directly composes a large number of hooks when those hooks collectively represent one cohesive feature capability.
+
+Prefer a higher-level feature hook when it improves the public API:
+
+```ts
+const feature = useFeatureCapability();
+```
+
+with internal composition.
+
+## Final Rules
+
+1. Do not create hooks merely to avoid long files.
+2. Do not create hooks for pure business logic.
+3. Do not put unrelated responsibilities into one hook.
+4. Group related React behavior around a meaningful use case.
+5. Use plain functions for domain logic.
+6. Use TanStack Query for server state when it is the project's chosen solution.
+7. Use the project's state manager for global client state.
+8. Keep trivial local UI state inside the component.
+9. Allow internal hooks when they improve decomposition.
+10. Expose a small, meaningful public API from each feature.
+11. Prefer composition over duplication.
+12. Optimize for cohesion, not hook count.
+13. Do not force every feature to have exactly one hook.
+14. Do not force every function to become a hook.
+15. The correct abstraction boundary is the use case/responsibility, not function size.
