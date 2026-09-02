@@ -100,7 +100,10 @@ html[lang="fa"] {
   }
   html {
     @apply font-sans;
-    scroll-behavior: smooth;
+  }
+
+  #smooth-wrapper {
+    overflow: hidden;
   }
 }
 

@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Mail, Phone } from "lucide-react";
 import { SectionHeading } from "./section-heading";
+import { PortfolioCard } from "./portfolio-card";
 import { contactLinks } from "../lib/portfolio-data";
 
 function LinkedinIcon({ className }: { className?: string }) {
@@ -52,27 +53,31 @@ export function ContactSection() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3">
         {channels.map((channel) => (
-          <a
-            key={channel.key}
-            href={channel.href}
-            target={channel.key === "linkedin" ? "_blank" : undefined}
-            rel={channel.key === "linkedin" ? "noopener noreferrer" : undefined}
-            className="group cursor-pointer rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-sm transition-colors duration-300 hover:border-primary/60"
-            data-reveal
-          >
-            <channel.icon className="size-5 text-primary" aria-hidden />
-            <p className="mt-4 text-sm font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
-              {channel.label}
-            </p>
-            <p
-              dir="ltr"
-              className="mt-1 truncate text-sm text-muted-foreground"
-            >
-              {channel.value}
-            </p>
-          </a>
+          <div key={channel.key} data-reveal>
+            <PortfolioCard>
+              <a
+                href={channel.href}
+                target={channel.key === "linkedin" ? "_blank" : undefined}
+                rel={
+                  channel.key === "linkedin" ? "noopener noreferrer" : undefined
+                }
+                className="block cursor-pointer p-6 transition-colors duration-200 hover:text-primary"
+              >
+                <channel.icon className="size-5 text-primary" aria-hidden />
+                <p className="mt-4 text-sm font-semibold text-foreground">
+                  {channel.label}
+                </p>
+                <p
+                  dir="ltr"
+                  className="mt-1 truncate text-sm text-muted-foreground"
+                >
+                  {channel.value}
+                </p>
+              </a>
+            </PortfolioCard>
+          </div>
         ))}
       </div>
 

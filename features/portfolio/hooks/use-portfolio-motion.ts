@@ -4,18 +4,59 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollSmoother);
+
+const NAV_OFFSET = "top 96px";
 
 export function usePortfolioMotion() {
-  const scopeRef = useRef<HTMLDivElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   useGSAP(
     () => {
+      const wrapper = wrapperRef.current;
+      const content = contentRef.current;
+
+      if (!wrapper || !content) {
+        return;
+      }
+
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Hero entrance
+        const smoother = ScrollSmoother.create({
+          wrapper,
+          content,
+          smooth: 1,
+          effects: true,
+          smoothTouch: 0.1,
+          // normalizeScroll locks position:fixed overlays (e.g. SwarmCursor) during smooth catch-up
+          normalizeScroll: false,
+        });
+
+        const handleAnchorClick = (event: MouseEvent) => {
+          const anchor = (event.target as HTMLElement | null)?.closest(
+            "a[href^='#']",
+          ) as HTMLAnchorElement | null;
+
+          if (!anchor) {
+            return;
+          }
+
+          const href = anchor.getAttribute("href");
+
+          if (!href || href === "#" || !content.querySelector(href)) {
+            return;
+          }
+
+          event.preventDefault();
+          smoother.scrollTo(href, true, NAV_OFFSET);
+        };
+
+        document.addEventListener("click", handleAnchorClick);
+
         gsap.from("[data-hero-item]", {
           opacity: 0,
           y: 28,
@@ -24,38 +65,28 @@ export function usePortfolioMotion() {
           stagger: 0.12,
         });
 
-        gsap.from("[data-hero-orbit]", {
+        gsap.from("[data-hero-shards]", {
           opacity: 0,
-          scale: 0.85,
-          duration: 1.6,
+          duration: 1.8,
           ease: "power2.out",
         });
 
-        // Slow orbiting accent dot
-        gsap.to("[data-hero-orbit]", {
-          rotation: 360,
-          duration: 50,
-          ease: "none",
-          repeat: -1,
-        });
-
-        // Section reveals
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
           gsap.from(el, {
             opacity: 0,
-            y: 36,
-            duration: 0.8,
-            ease: "power3.out",
+            y: 48,
+            ease: "none",
             scrollTrigger: {
               trigger: el,
-              start: "top 85%",
-              once: true,
+              start: "top 92%",
+              end: "top 55%",
+              scrub: 0.8,
             },
           });
         });
 
-        // Experience timeline line draws with scroll
-        const line = scopeRef.current?.querySelector("[data-timeline-line]");
+        const line = content.querySelector("[data-timeline-line]");
+
         if (line) {
           gsap.from(line, {
             scaleY: 0,
@@ -68,10 +99,37 @@ export function usePortfolioMotion() {
             },
           });
         }
+
+        return () => {
+          document.removeEventListener("click", handleAnchorClick);
+          smoother.kill();
+        };
       });
+
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set("[data-hero-item], [data-hero-shards], [data-reveal]", {
+          clearProps: "all",
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
+          gsap.from(el, {
+            opacity: 0,
+            y: 24,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 90%",
+              once: true,
+            },
+          });
+        });
+      });
+
+      return () => mm.revert();
     },
-    { scope: scopeRef },
+    { scope: contentRef },
   );
 
-  return scopeRef;
+  return { wrapperRef, contentRef };
 }

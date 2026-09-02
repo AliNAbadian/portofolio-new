@@ -3,7 +3,13 @@
 import { usePortfolioMotion } from "../hooks/use-portfolio-motion";
 
 export function PortfolioShell({ children }: { children: React.ReactNode }) {
-  const scopeRef = usePortfolioMotion();
+  const { wrapperRef, contentRef } = usePortfolioMotion();
 
-  return <div ref={scopeRef}>{children}</div>;
+  return (
+    <div id="smooth-wrapper" ref={wrapperRef}>
+      <div id="smooth-content" ref={contentRef}>
+        {children}
+      </div>
+    </div>
+  );
 }

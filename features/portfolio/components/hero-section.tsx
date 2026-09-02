@@ -1,21 +1,18 @@
 import { useTranslations } from "next-intl";
 import { ArrowDown, MapPin } from "lucide-react";
+import { HeroBackground } from "./hero-background";
+import MorphText from "@/components/ui/morph-text";
 
 export function HeroSection() {
   const t = useTranslations("Hero");
+  const morphWords = t.raw("morphWords") as string[];
 
   return (
     <section
       id="top"
       className="relative flex min-h-svh flex-col items-center justify-center px-6 text-center"
     >
-      <div
-        aria-hidden
-        className="absolute left-1/2 top-1/2 -z-10 size-[34rem] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full border border-secondary/20 max-md:size-80"
-        data-hero-orbit
-      >
-        <span className="absolute -top-1.5 left-1/2 size-3 rounded-full bg-primary glow-accent" />
-      </div>
+      <HeroBackground />
 
       <p
         className="mb-4 flex items-center gap-2 text-sm tracking-widest text-primary uppercase"
@@ -29,19 +26,13 @@ export function HeroSection() {
         {t("greeting")}
       </p>
 
-      <h1
-        className="mt-2 text-5xl font-bold tracking-tight text-glow md:text-7xl"
-        data-hero-item
-      >
-        {t("name")}
+      <h1 className="mt-2" data-hero-item>
+        <MorphText
+          words={morphWords}
+          interval={3200}
+          textClassName="text-4xl font-bold  text-glow sm:text-5xl md:text-6xl lg:text-7xl"
+        />
       </h1>
-
-      <p
-        className="mt-4 text-2xl font-medium text-primary md:text-3xl"
-        data-hero-item
-      >
-        {t("role")}
-      </p>
 
       <p
         className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg"
@@ -50,10 +41,7 @@ export function HeroSection() {
         {t("tagline")}
       </p>
 
-      <div
-        className="mt-10 flex flex-col gap-4 sm:flex-row"
-        data-hero-item
-      >
+      <div className="mt-10 flex flex-col gap-4 sm:flex-row" data-hero-item>
         <a
           href="#projects"
           className="cursor-pointer rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/85 glow-accent"

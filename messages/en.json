@@ -1,29 +1,39 @@
 {
   "Metadata": {
     "title": "Ali N. Abadian — Frontend Developer",
-    "description": "Frontend engineer building scalable B2B React/Next.js products — maps, commerce, and data-heavy SaaS with FSD, micro-frontends, and AI-native workflows."
+    "description": "Frontend for heavy B2B products: maps, commerce, and data-heavy SaaS with React and Next.js. Scalable architecture, high performance, and intelligent workflows."
   },
   "Nav": {
+    "top": "Home",
     "about": "About",
     "experience": "Experience",
     "projects": "Projects",
     "skills": "Skills",
     "contact": "Contact",
-    "switchLocale": "فارسی"
+    "switchLocale": "فارسی",
+    "openMenu": "Open navigation",
+    "closeMenu": "Close navigation",
+    "wheelLabel": "Site navigation"
   },
   "Hero": {
     "greeting": "Hello, I am",
     "name": "Ali N. Abadian",
     "role": "Frontend Developer",
-    "tagline": "I build complex B2B React/Next.js products — scalable systems for maps, commerce, and data-heavy SaaS, with performance-first architecture and AI-native workflows.",
+    "morphWords": [
+      "Ali N. Abadian",
+      "Frontend Developer",
+      "AI Integrator",
+      "Systems Designer"
+    ],
+    "tagline": "I build complex B2B interfaces that work at real scale — from maps and logistics to storefronts and data-heavy SaaS, with React, Next.js, and architecture that doesn't slow product growth.",
     "location": "Tabriz, Iran",
-    "ctaProjects": "View Projects",
-    "ctaContact": "Get in Touch",
-    "scroll": "Scroll to explore"
+    "ctaProjects": "See Projects",
+    "ctaContact": "Start a Conversation",
+    "scroll": "Scroll down"
   },
   "About": {
     "heading": "About",
-    "body": "Frontend engineer focused on complex B2B React/Next.js products, building scalable systems with Feature-Sliced Design, micro-frontends, and performance-first architecture for maps, commerce, and data-heavy SaaS. Experienced in AI-native frontend development, including Generative UI, MCP tools, agentic workflows, and Vercel/OpenAI SDK integrations.",
+    "body": "I'm a frontend engineer working on complex B2B products — where UI isn't just pretty; it has to be fast, maintainable, and ready to grow. With Feature-Sliced Design, micro-frontends, and a focus on performance, I build systems teams can extend without friction. I also work in AI-driven development: Generative UI, MCP tools, agentic workflows, and Vercel/OpenAI SDK integrations.",
     "education": "Education",
     "educationDetail": "Computer Engineering — Technical University of Tabriz, 2022–2027",
     "languages": "Languages",
@@ -37,53 +47,53 @@
         "title": "Senior Frontend Developer",
         "company": "Bulut",
         "period": "June 2025 — Present",
-        "summary": "B2B ERP company. Owner of the Route Manager, an OptimoRoute-class logistics UI.",
+        "summary": "Enterprise ERP. Owner of Route Manager — an OptimoRoute-class logistics UI.",
         "highlights": [
-          "Drove a 70% memory optimization on Route Manager while scaling it to ~94 routes / ~3,700 invoices — clustering, virtualized timelines, narrow Zustand subscriptions, and parallel OSRM.",
-          "Architected the Sale Platform Admin with an Nx monorepo and Rspack Module Federation: independent deploys, shared packages, faster incremental builds.",
-          "Split product surfaces with FSD and shared UI contracts so features ship without a props monolith.",
-          "Shipped the Customer Panel commerce flow (catalog, cart, orders) on TanStack Query with explicit cache and invalidation.",
-          "Standardized agentic AI delivery (Cursor/Claude skills, rules, plan-to-implement loops) so generated code matches FSD boundaries.",
-          "Built a company-wide icon pack package with React component support."
+          "Cut Route Manager memory usage by 70% while scaling to ~94 routes and ~3,700 invoices — clustering, virtualized timelines, narrow Zustand subscriptions, and parallel OSRM.",
+          "Designed the Sale Platform Admin architecture with an Nx monorepo and Rspack Module Federation: independent deploys, shared packages, faster incremental builds.",
+          "Separated product surfaces with FSD and shared UI contracts so features ship without a props monolith.",
+          "Built the Customer Panel commerce flow (catalog, cart, orders) on TanStack Query with explicit cache and invalidation.",
+          "Standardized agentic AI development (Cursor/Claude skills and rules, plan-to-implement loops) so generated code stays aligned with FSD boundaries.",
+          "Built a company-wide icon pack with React component support."
         ]
       },
       "freelance": {
         "title": "Freelance Frontend Developer",
         "company": "Self-Employed",
         "period": "Feb 2025 — June 2025",
-        "summary": "Independent frontend and web development for client projects.",
+        "summary": "Frontend and web for client projects — idea to delivery.",
         "highlights": [
-          "Built a realtime melted-gold trading platform for the Tabriz gold bazaar — live pricing and trading flows powered by WebSockets.",
-          "Shipped a full Next.js e-commerce site end-to-end: App Router, SSR/SSG product routes, cart, catalog, and checkout.",
-          "Developed investisor.com with a rich admin panel (CKEditor), SSG/SSR rendering, and Next.js Server Actions.",
-          "Owned delivery end-to-end — scope, UI implementation, and handoff of production-ready interfaces."
+          "Built a realtime melted-gold trading platform for the Tabriz gold bazaar — live pricing and trades over WebSocket, no page refresh.",
+          "Shipped a full Next.js e-commerce site: App Router, SSR/SSG product routes, catalog, cart, and checkout.",
+          "Developed investisor.com with an admin panel (CKEditor), SSG/SSR rendering, and Server Actions for forms and mutations.",
+          "Owned delivery end-to-end — from scoping to production-ready UI."
         ]
       },
       "primeproperty": {
         "title": "Senior Frontend Developer",
         "company": "PrimePropertyTurkey",
         "period": "July 2024 — March 2025",
-        "summary": "Istanbul real-estate agency for buying, selling, and investing in properties.",
+        "summary": "Istanbul real-estate agency — buying, selling, and property investment.",
         "highlights": [
-          "Implemented the public property platform in Next.js, structuring pages and data fetching for a large catalog.",
-          "Used SSG/SSR so thousands of properties load in seconds — pre-rendered listing and detail routes.",
-          "Added i18n so buyers and investors browse the catalog in multiple languages without separate sites.",
-          "Owned frontend delivery for listing discovery and property detail experiences."
+          "Built the public property platform in Next.js — page structure and data fetching for a large catalog.",
+          "SSG/SSR loads thousands of properties in seconds — pre-rendered listing and detail routes.",
+          "Added i18n so buyers and investors browse one catalog in multiple languages, without separate sites.",
+          "Owned frontend delivery for listing search and property detail pages."
         ]
       }
     }
   },
   "Projects": {
     "heading": "Projects",
-    "subheading": "Selected work across logistics, realtime trading, and commerce.",
+    "subheading": "Selected work in logistics, realtime trading, and commerce.",
     "items": {
       "routeManager": {
         "name": "Route Manager",
-        "description": "OptimoRoute-class logistics UI: MapLibre map, multi-stop routing, scheduling, WebGL micro-interactions — 70% memory improvement at ~94 routes / ~3,700 invoices."
+        "description": "OptimoRoute-class logistics UI: MapLibre map, multi-stop routing, scheduling, and WebGL micro-interactions — 70% memory improvement at 94 routes and 3,700 invoices."
       },
       "goldPlatform": {
         "name": "Gold Trading Platform",
-        "description": "Realtime melted-gold marketplace for the Tabriz gold bazaar — live pricing and trading flows for sellers and buyers, updating without page reloads."
+        "description": "Realtime melted-gold marketplace for the Tabriz gold bazaar — live pricing and trades for buyers and sellers, without reloading."
       },
       "salePlatform": {
         "name": "Sale Platform Admin",
@@ -91,18 +101,19 @@
       },
       "investisor": {
         "name": "Investisor.com",
-        "description": "Content and investment platform with a rich admin panel, CKEditor content editing, SSG/SSR rendering, and Server Actions for mutations."
+        "description": "Content and investment platform: admin panel, CKEditor editing, SSG/SSR, and Server Actions."
       }
     }
   },
   "Skills": {
     "heading": "Skills",
+    "logoLoopLabel": "Technologies and tools I work with",
     "groups": {
       "core": "Core",
       "architecture": "Architecture",
       "state": "State & Data",
       "graphics": "Maps & Graphics",
-      "ai": "AI-Native Dev",
+      "ai": "AI Development",
       "soft": "Soft Skills"
     },
     "soft": [
@@ -116,7 +127,7 @@
   },
   "Contact": {
     "heading": "Contact",
-    "subheading": "Open to interesting frontend challenges. Reach out through any channel.",
+    "subheading": "I work on serious frontend projects. Whatever channel works for you — say hello.",
     "email": "Email",
     "phone": "Phone",
     "linkedin": "LinkedIn",

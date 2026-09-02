@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { SwarmCursorProvider } from "@/features/portfolio/components/swarm-cursor-provider";
 import "../globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -46,11 +47,12 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={direction}
-      data-scroll-behavior="smooth"
       className={`${spaceGrotesk.variable} ${rokh.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <SwarmCursorProvider>{children}</SwarmCursorProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

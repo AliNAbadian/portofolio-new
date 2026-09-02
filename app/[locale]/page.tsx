@@ -12,17 +12,19 @@ import {
 
 export default function Home() {
   return (
-    <PortfolioShell>
+    <>
       <Starfield />
       <SiteNav />
-      <main>
-        <HeroSection />
-        <AboutSection />
-        <ExperienceSection />
-        <ProjectsSection />
-        <SkillsSection />
-        <ContactSection />
-      </main>
-    </PortfolioShell>
+      <PortfolioShell>
+        <main>
+          <HeroSection />
+          <AboutSection />
+          <ExperienceSection />
+          <ProjectsSection />
+          <SkillsSection />
+          <ContactSection />
+        </main>
+      </PortfolioShell>
+    </>
   );
 }
