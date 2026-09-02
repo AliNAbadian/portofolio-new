@@ -16,6 +16,7 @@ export function NavOptionWheel() {
     contentRef,
     opensFromRight,
     wheelSide,
+    wheelConfig,
     labels,
   } = useNavOptionWheel();
 
@@ -27,7 +28,7 @@ export function NavOptionWheel() {
         aria-expanded={isMounted}
         aria-controls="nav-option-wheel-panel"
         aria-label={labels.openMenu}
-        className="fixed end-4 top-4 z-50 hidden size-15 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-primary shadow-lg backdrop-blur-md transition-colors duration-200 hover:bg-card hover:text-foreground lg:flex"
+        className="fixed end-4 top-4 z-50 flex size-11 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-primary shadow-lg backdrop-blur-md transition-colors duration-200 hover:bg-card hover:text-foreground lg:size-12"
       >
         <LayoutGrid className="size-5" aria-hidden />
       </button>
@@ -35,7 +36,7 @@ export function NavOptionWheel() {
       {isMounted ? (
         <div
           ref={overlayRef}
-          className="fixed inset-0 z-60 hidden lg:block"
+          className="fixed inset-0 z-60"
           role="presentation"
         >
           <button
@@ -53,14 +54,14 @@ export function NavOptionWheel() {
             aria-modal="true"
             aria-label={labels.wheelLabel}
             dir="ltr"
-            className={`pointer-events-none absolute inset-y-0 w-full max-w-4xl ${opensFromRight ? "end-0" : "start-0"}`}
+            className={`pointer-events-none absolute inset-y-0 w-full max-w-full lg:max-w-4xl ${opensFromRight ? "end-0" : "start-0"}`}
             onWheel={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={close}
               aria-label={labels.closeMenu}
-              className={`pointer-events-auto absolute top-6 z-10 flex size-10 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground ${opensFromRight ? "end-6" : "start-6"}`}
+              className={`pointer-events-auto absolute top-5 z-10 flex size-10 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground lg:top-6 ${opensFromRight ? "end-5 lg:end-6" : "start-5 lg:start-6"}`}
             >
               <X className="size-5" aria-hidden />
             </button>
@@ -73,14 +74,14 @@ export function NavOptionWheel() {
                 textColor="#5a8a7a"
                 activeColor="#89d7b7"
                 side={wheelSide}
-                fontSize={8}
-                spacing={1.35}
+                fontSize={wheelConfig.fontSize}
+                spacing={wheelConfig.spacing}
                 curve={1}
-                tilt={9}
+                tilt={wheelConfig.tilt}
                 blur={1.5}
                 fade={0.22}
                 smoothing={220}
-                inset={56}
+                inset={wheelConfig.inset}
                 loop={false}
                 draggable
                 ariaLabel={labels.wheelLabel}

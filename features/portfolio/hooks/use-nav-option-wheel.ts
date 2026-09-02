@@ -137,6 +137,27 @@ export function useNavOptionWheel() {
     };
   }, [isMounted]);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const onChange = () => setIsMobile(media.matches);
+
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  const wheelConfig = useMemo(
+    () => ({
+      fontSize: isMobile ? 3.75 : 8,
+      inset: isMobile ? 24 : 56,
+      spacing: 1.35,
+      tilt: isMobile ? 8 : 9,
+    }),
+    [isMobile],
+  );
+
   return {
     isMounted,
     items,
@@ -148,6 +169,7 @@ export function useNavOptionWheel() {
     contentRef,
     opensFromRight,
     wheelSide: opensFromRight ? ("right" as const) : ("left" as const),
+    wheelConfig,
     labels: {
       openMenu: t("openMenu"),
       closeMenu: t("closeMenu"),
