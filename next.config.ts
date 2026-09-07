@@ -11,6 +11,9 @@ const basePath =
 
 const nextConfig: NextConfig = {
   output: isGithubPages ? "export" : "standalone",
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
   ...(isGithubPages
     ? {
         basePath,

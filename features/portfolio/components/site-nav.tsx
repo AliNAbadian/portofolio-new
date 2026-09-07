@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Languages } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { NavOptionWheel } from "./nav-option-wheel";
+import profileImage from "../../../public/profile.jpg";
 
 export function SiteNav() {
   const t = useTranslations("Nav");
@@ -18,11 +19,11 @@ export function SiteNav() {
         <nav className="flex items-center gap-2 rounded-full border border-border bg-card/70 p-1.5 pe-3 backdrop-blur-md">
           <a
             href="#top"
-            className="block shrink-0 overflow-hidden rounded-full ring-2 ring-primary/30 transition-[box-shadow] hover:ring-primary/60"
+            className="block shrink-0 overflow-hidden rounded-full ring-2 ring-primary/30 transition-shadow hover:ring-primary/60"
             aria-label={tHero("name")}
           >
             <Image
-              src="/profile.jpg"
+              src={profileImage}
               alt={tHero("name")}
               width={40}
               height={40}
