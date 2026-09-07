@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 import { hasLocale } from "next-intl";
@@ -23,7 +23,11 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: LayoutProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("Metadata");
 
   return {
@@ -34,12 +38,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function LocaleLayout({
   children,
+  params,
 }: LayoutProps<"/[locale]">) {
-  const locale = await getLocale();
+  const { locale } = await params;
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+
+  setRequestLocale(locale);
 
   const direction = locale === "fa" ? "rtl" : "ltr";
 

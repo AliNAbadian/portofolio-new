@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { SiGithub } from "react-icons/si";
 import { SectionHeading } from "./section-heading";
 import { PortfolioCard } from "./portfolio-card";
 import { projectItems } from "../lib/portfolio-data";
@@ -22,7 +23,7 @@ export function ProjectsSection() {
         {projectItems.map((project) => (
           <div key={project.key} data-reveal>
             <PortfolioCard>
-              <article className="relative p-6">
+              <article className="relative flex h-full flex-col p-6">
                 <div
                   aria-hidden
                   className="pointer-events-none absolute -top-16 -end-16 size-40 rounded-full bg-primary/10 blur-2xl opacity-60"
@@ -46,6 +47,18 @@ export function ProjectsSection() {
                     </li>
                   ))}
                 </ul>
+
+                {"href" in project && project.href ? (
+                  <a
+                    href={project.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-medium text-primary transition-colors hover:text-foreground"
+                  >
+                    <SiGithub className="size-4" aria-hidden />
+                    {t("viewOnGithub")}
+                  </a>
+                ) : null}
               </article>
             </PortfolioCard>
           </div>

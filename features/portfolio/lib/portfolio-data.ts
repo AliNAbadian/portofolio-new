@@ -24,6 +24,11 @@ export const experienceRoleKeys = [
 
 export const projectItems = [
   {
+    key: "polyfed",
+    tags: ["Nx", "Vite", "Module Federation", "Bun"],
+    href: "https://github.com/AliNAbadian/polyfed",
+  },
+  {
     key: "routeManager",
     tags: ["MapLibre", "WebGL", "Zustand", "OSRM"],
   },

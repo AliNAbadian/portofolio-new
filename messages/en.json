@@ -85,8 +85,13 @@
   },
   "Projects": {
     "heading": "Projects",
-    "subheading": "Selected work in logistics, realtime trading, and commerce.",
+    "subheading": "Selected work in platform architecture, logistics, realtime trading, and commerce.",
+    "viewOnGithub": "View on GitHub",
     "items": {
+      "polyfed": {
+        "name": "Polyfed",
+        "description": "Open-source polyrepo Module Federation for React — thin Nx/Vite/Bun platform, on-demand remote checkouts, and a single registry that drives shell routes, nav, and remoteEntry resolution without cloning every team’s source."
+      },
       "routeManager": {
         "name": "Route Manager",
         "description": "OptimoRoute-class logistics UI: MapLibre map, multi-stop routing, scheduling, and WebGL micro-interactions — 70% memory improvement at 94 routes and 3,700 invoices."

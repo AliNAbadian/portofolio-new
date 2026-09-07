@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import {
   AboutSection,
   ContactSection,
@@ -10,7 +11,10 @@ import {
   Starfield,
 } from "@/features/portfolio";
 
-export default function Home() {
+export default async function Home({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <>
       <Starfield />
