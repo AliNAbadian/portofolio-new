@@ -3,6 +3,7 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
+import { createChatLanguageModel } from "../lib/create-chat-model";
 import { buildSystemPrompt } from "../model/build-system-prompt";
 import type { ChatQuotaView } from "../model/chat-limits";
 import { validateChatMessage } from "../model/chat-message-rules";
@@ -79,14 +80,6 @@ function jsonResponse(
     status: init.status,
     headers: init.headers,
   });
-}
-
-function ensureGatewayKey(): boolean {
-  if (!process.env.AI_GATEWAY_API_KEY && process.env.VERCEL_AI_KEY) {
-    process.env.AI_GATEWAY_API_KEY = process.env.VERCEL_AI_KEY;
-  }
-
-  return Boolean(process.env.AI_GATEWAY_API_KEY);
 }
 
 function logChatEvent(event: {
@@ -191,7 +184,8 @@ export function createChatRouteHandlers() {
       );
     }
 
-    if (!ensureGatewayKey()) {
+    const model = createChatLanguageModel();
+    if (!model) {
       const quota = peekQuota(visitorId, ipKey);
       logChatEvent({
         visitorHash,
@@ -263,7 +257,7 @@ export function createChatRouteHandlers() {
 
     try {
       const result = streamText({
-        model: process.env.CHAT_MODEL?.trim() || "openai/gpt-4.1-mini",
+        model,
         system: buildSystemPrompt(validation.locale),
         messages: modelMessages,
         onError: () => {

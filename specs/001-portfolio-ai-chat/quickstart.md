@@ -5,8 +5,8 @@ Manual validation against [spec.md](./spec.md), [chat-http.md](./contracts/chat-
 ## Prerequisites
 
 - Bun + Node 20+
-- `AI_GATEWAY_API_KEY` (or `VERCEL_AI_KEY`) on the API process only
-- Optional: `CHAT_MODEL`, `NEXT_PUBLIC_CHAT_API_URL`, `CHAT_ALLOWED_ORIGINS`
+- `AVALAI_API_KEY` on the API process only (AvalAI, https://docs.avalai.ir/en/)
+- Optional: `CHAT_MODEL` (default `gpt-4.1-nano-2025-04-14`), `AVALAI_BASE_URL`, `NEXT_PUBLIC_CHAT_API_URL`, `CHAT_ALLOWED_ORIGINS`
 
 ## Local (UI + API together)
 
@@ -31,7 +31,7 @@ Send until 10 accepted messages in one hour. 11th POST returns 429 with wait cop
 
 ## Static + hosted API (SC-008)
 
-1. Run standalone/Docker with the API and Gateway key.
+1. Run standalone/Docker with the API and `AVALAI_API_KEY`.
 2. Build Pages with `GITHUB_PAGES=true` and `NEXT_PUBLIC_CHAT_API_URL=https://<api-host>/api/chat`.
 3. Open the Pages URL `/en/`. Complete steps 2–4 above. DevTools: POST goes to the API host, not `github.io` `/api`.
 
