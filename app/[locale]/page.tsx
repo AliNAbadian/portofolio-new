@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { AboutMeChatLauncher } from "@/features/about-me-chat";
 import {
   AboutSection,
   ContactSection,
@@ -19,6 +20,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
     <>
       <Starfield />
       <SiteNav />
+      <AboutMeChatLauncher />
       <PortfolioShell>
         <main>
           <HeroSection />

@@ -137,5 +137,24 @@
     "phone": "Phone",
     "linkedin": "LinkedIn",
     "footer": "Designed & built by Ali N. Abadian"
+  },
+  "Chat": {
+    "open": "Ask about Ali",
+    "close": "Close chat",
+    "emptyTitle": "Ask about Ali",
+    "emptyDescription": "Questions about work, skills, projects, and how to get in touch.",
+    "send": "Send",
+    "error": "Something went wrong. Try again.",
+    "unavailable": "Chat is temporarily unavailable. Try again later.",
+    "rateLimited": "You have reached the message limit. Try again in {seconds} seconds.",
+    "remaining": "{hour} left this hour · {day} left today",
+    "placeholder": "Ask about Ali’s work…",
+    "validationEmpty": "Type a question first.",
+    "tooLong": "Keep the question under 2000 characters.",
+    "live": "Writing a reply…",
+    "suggestionRole": "What does Ali do?",
+    "suggestionProjects": "What projects has he built?",
+    "suggestionContact": "How can I contact Ali?",
+    "dialogLabel": "About Ali chat"
   }
 }
